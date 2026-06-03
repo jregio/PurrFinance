@@ -1,10 +1,12 @@
-import { type CSSProperties, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
-import type { FinanceCategory, FinanceItem, MonthKey } from "../types";
+import { type CSSProperties, type KeyboardEvent, type PointerEvent, useEffect, useMemo, useRef, useState } from "react";
+import type { FinanceCategory, FinanceFlow, FinanceItem, MonthKey } from "../types";
 import { categoryLogoAssets, netLogoAsset } from "../assets/assets";
 import {
-  getCategoryValue,
+  getCategorySignedValue,
+  getItemFlow,
   getItemMonthValueState,
-  getItemValue,
+  getItemSignedValue,
+  getSubItemFlow,
   getSubItemMonthValueState,
 } from "../utils/financeCalculations";
 import { formatCurrency } from "../utils/formatters";
@@ -14,6 +16,7 @@ type EditValuesPanelProps = {
   categories: FinanceCategory[];
   selectedMonth: MonthKey;
   onAmountChange: (targetId: string, amount: number | null) => void;
+  onFlowChange: (targetId: string, flow: FinanceFlow) => void;
   selectedTargetId: string;
   onTargetChange: (targetId: string) => void;
 };
@@ -31,6 +34,7 @@ export function EditValuesPanel({
   categories,
   selectedMonth,
   onAmountChange,
+  onFlowChange,
   selectedTargetId,
   onTargetChange,
 }: EditValuesPanelProps) {
@@ -73,14 +77,23 @@ export function EditValuesPanel({
     if (!targetSelection) {
       if (selectedTargetId === "summary:net-position") {
         setActiveArea("net");
+        setActiveCategoryId(netCategories[0]?.id ?? "");
+        setActiveItemId(netCategories[0]?.items[0]?.id ?? "");
       }
+
+      if (selectedTargetId === "summary:accounts") {
+        setActiveArea("accounts");
+        setActiveCategoryId(accountCategories[0]?.id ?? "");
+        setActiveItemId(accountCategories[0]?.items[0]?.id ?? "");
+      }
+
       return;
     }
 
     setActiveArea(targetSelection.isAccountCategory ? "accounts" : "net");
     setActiveCategoryId(targetSelection.categoryId);
     setActiveItemId(targetSelection.itemId);
-  }, [categories, selectedTargetId]);
+  }, [accountCategories, categories, netCategories, selectedTargetId]);
 
   function startColumnResize(columnIndex: number, event: PointerEvent<HTMLElement>) {
     const panel = panelRef.current;
@@ -156,7 +169,7 @@ export function EditValuesPanel({
       if (firstAccountCategory) {
         setActiveCategoryId(firstAccountCategory.id);
         setActiveItemId(firstAccountCategory.items[0]?.id ?? "");
-        onTargetChange(`category:${firstAccountCategory.id}`);
+        onTargetChange("summary:accounts");
       }
 
       return;
@@ -207,7 +220,7 @@ export function EditValuesPanel({
 
       <nav className="edit-category-nav" aria-label="Edit categories">
         {visibleCategories.map((category) => {
-          const total = getCategoryValue(category, selectedMonth);
+          const total = getCategorySignedValue(category, selectedMonth);
           const isActive = category.id === activeCategory?.id;
 
           return (
@@ -229,7 +242,7 @@ export function EditValuesPanel({
               </span>
               <span className="edit-category-copy">
                 <span>{category.name}</span>
-                <strong>{formatCurrency(total)}</strong>
+                <strong className={getSignedAmountClass(total)}>{formatCurrency(total)}</strong>
               </span>
             </button>
           );
@@ -248,6 +261,7 @@ export function EditValuesPanel({
       <nav className="edit-item-nav" aria-label="Edit items">
         {activeCategory?.items.map((item) => {
           const isActive = item.id === activeItem?.id;
+          const total = getItemSignedValue(activeCategory, item, selectedMonth);
 
           return (
             <button
@@ -262,7 +276,7 @@ export function EditValuesPanel({
               onClick={() => selectItem(item)}
             >
               <span>{item.name}</span>
-              <strong>{formatCurrency(getItemValue(item, selectedMonth))}</strong>
+              <strong className={getSignedAmountClass(total)}>{formatCurrency(total)}</strong>
             </button>
           );
         })}
@@ -288,9 +302,11 @@ export function EditValuesPanel({
         />
         {activeItem && (
           <SelectedItemEditor
+            category={activeCategory}
             item={activeItem}
             selectedMonth={selectedMonth}
             onAmountChange={onAmountChange}
+            onFlowChange={onFlowChange}
             selectedTargetId={selectedTargetId}
             onTargetChange={onTargetChange}
           />
@@ -366,17 +382,21 @@ function clamp(value: number, min: number, max: number) {
 }
 
 type SelectedItemEditorProps = {
+  category: FinanceCategory;
   item: FinanceItem;
   selectedMonth: MonthKey;
   onAmountChange: (targetId: string, amount: number | null) => void;
+  onFlowChange: (targetId: string, flow: FinanceFlow) => void;
   selectedTargetId: string;
   onTargetChange: (targetId: string) => void;
 };
 
 function SelectedItemEditor({
+  category,
   item,
   selectedMonth,
   onAmountChange,
+  onFlowChange,
   selectedTargetId,
   onTargetChange,
 }: SelectedItemEditorProps) {
@@ -386,22 +406,30 @@ function SelectedItemEditor({
         <div className="selected-subitem-list">
           {item.subItems.map((subItem) => {
             const valueState = getSubItemMonthValueState(subItem, selectedMonth);
+            const targetId = `subitem:${subItem.id}`;
 
             return (
-              <button
+              <div
                 className={
-                  selectedTargetId === `subitem:${subItem.id}`
+                  selectedTargetId === targetId
                     ? "selected-subitem-row is-selected"
                     : "selected-subitem-row"
                 }
                 key={subItem.id}
-                type="button"
-                onClick={() => onTargetChange(`subitem:${subItem.id}`)}
+                role="button"
+                tabIndex={0}
+                onClick={() => onTargetChange(targetId)}
+                onKeyDown={(event) => handleRowKeyDown(event, () => onTargetChange(targetId))}
               >
                 <div>
                   <span>{subItem.name}</span>
                   {!valueState.hasValue && <small>No value entered</small>}
                 </div>
+                <FlowToggle
+                  flow={getSubItemFlow(category, item, subItem)}
+                  label={subItem.name}
+                  onChange={(flow) => onFlowChange(targetId, flow)}
+                />
                 <span onClick={(event) => event.stopPropagation()}>
                   <FinancialInput
                     id={`edit-${item.id}-${subItem.id}-${selectedMonth}`}
@@ -409,10 +437,10 @@ function SelectedItemEditor({
                     value={valueState.value}
                     hasValue={valueState.hasValue}
                     isNull={valueState.isNull}
-                    onChange={(amount) => onAmountChange(`subitem:${subItem.id}`, amount)}
+                    onChange={(amount) => onAmountChange(targetId, amount)}
                   />
                 </span>
-              </button>
+              </div>
             );
           })}
         </div>
@@ -421,22 +449,30 @@ function SelectedItemEditor({
   }
 
   const valueState = getItemMonthValueState(item, selectedMonth);
+  const targetId = `item:${item.id}`;
 
   return (
     <div className="selected-item-editor is-subitem-only">
-      <button
+      <div
         className={
-          selectedTargetId === `item:${item.id}`
+          selectedTargetId === targetId
             ? "selected-direct-row is-selected"
             : "selected-direct-row"
         }
-        type="button"
-        onClick={() => onTargetChange(`item:${item.id}`)}
+        role="button"
+        tabIndex={0}
+        onClick={() => onTargetChange(targetId)}
+        onKeyDown={(event) => handleRowKeyDown(event, () => onTargetChange(targetId))}
       >
         <div>
           <span>{item.name}</span>
           {!valueState.hasValue && <small>No value entered</small>}
         </div>
+        <FlowToggle
+          flow={getItemFlow(category, item)}
+          label={item.name}
+          onChange={(flow) => onFlowChange(targetId, flow)}
+        />
         <span onClick={(event) => event.stopPropagation()}>
           <FinancialInput
             id={`edit-${item.id}-${selectedMonth}`}
@@ -444,10 +480,66 @@ function SelectedItemEditor({
             value={valueState.value}
             hasValue={valueState.hasValue}
             isNull={valueState.isNull}
-            onChange={(amount) => onAmountChange(`item:${item.id}`, amount)}
+            onChange={(amount) => onAmountChange(targetId, amount)}
           />
         </span>
-      </button>
+      </div>
     </div>
   );
+}
+
+function FlowToggle({
+  flow,
+  label,
+  onChange,
+}: {
+  flow: FinanceFlow;
+  label: string;
+  onChange: (flow: FinanceFlow) => void;
+}) {
+  return (
+    <span className={`flow-toggle is-${flow}`} onClick={(event) => event.stopPropagation()}>
+      <button
+        className={flow === "earning" ? "is-active" : ""}
+        type="button"
+        aria-pressed={flow === "earning"}
+        aria-label={`Set ${label} as positive`}
+        title="Positive"
+        onClick={() => onChange("earning")}
+      >
+        +
+      </button>
+      <button
+        className={flow === "loss" ? "is-active" : ""}
+        type="button"
+        aria-pressed={flow === "loss"}
+        aria-label={`Set ${label} as negative`}
+        title="Negative"
+        onClick={() => onChange("loss")}
+      >
+        -
+      </button>
+    </span>
+  );
+}
+
+function getSignedAmountClass(value: number) {
+  if (value > 0) {
+    return "signed-amount is-positive";
+  }
+
+  if (value < 0) {
+    return "signed-amount is-negative";
+  }
+
+  return "signed-amount";
+}
+
+function handleRowKeyDown(event: KeyboardEvent<HTMLElement>, onActivate: () => void) {
+  if (event.key !== "Enter" && event.key !== " ") {
+    return;
+  }
+
+  event.preventDefault();
+  onActivate();
 }

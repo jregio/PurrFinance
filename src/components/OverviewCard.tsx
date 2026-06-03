@@ -60,7 +60,7 @@ export function OverviewCard({
   const netCategories = categories.filter((category) => !isAccountCategory(category));
   const accountCategories = categories.filter((category) => isAccountCategory(category));
   const selectedCategory = getOverviewSelection(categories, selectedTargetId).category;
-  const isAccountsView = selectedCategory ? isAccountCategory(selectedCategory) : false;
+  const isAccountsView = selectedTargetId === "summary:accounts" || (selectedCategory ? isAccountCategory(selectedCategory) : false);
   const ringCategories = isAccountsView ? accountCategories : netCategories;
   const selection = getOverviewSelection(ringCategories, selectedTargetId);
   const activeCategory = selection.category ?? ringCategories[0];

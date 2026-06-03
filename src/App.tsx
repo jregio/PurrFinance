@@ -3,10 +3,10 @@ import { EditValuesPanel } from "./components/EditValuesPanel";
 import { OverviewCard } from "./components/OverviewCard";
 import { TrendsCard } from "./components/TrendsCard";
 import { seedFinanceCategories } from "./data/seedFinanceData";
-import type { FinanceAppData, FinanceCategory } from "./types";
+import type { FinanceAppData, FinanceCategory, FinanceFlow } from "./types";
 import { getCurrentMonthKey } from "./utils/dateUtils";
 import { loadFinanceDataFile, saveFinanceDataFile } from "./utils/financeDataFile";
-import { getFlattenedTrendOptions, updateMonthlyAmount } from "./utils/financeCalculations";
+import { getFlattenedTrendOptions, updateFinanceFlow, updateMonthlyAmount } from "./utils/financeCalculations";
 
 const defaultTrendTargetId = "item:credit-card";
 const mainResizeHandleSize = 10;
@@ -93,6 +93,13 @@ export default function App() {
         currentData.selectedMonth,
         amount,
       ),
+    }));
+  }
+
+  function handleFlowChange(targetId: string, flow: FinanceFlow) {
+    setAppData((currentData) => ({
+      ...currentData,
+      categories: updateFinanceFlow(currentData.categories, targetId, flow),
     }));
   }
 
@@ -192,6 +199,7 @@ export default function App() {
             categories={categories}
             selectedMonth={selectedMonth}
             onAmountChange={handleAmountChange}
+            onFlowChange={handleFlowChange}
             selectedTargetId={selectedTrendTargetId}
             onTargetChange={setSelectedTrendTargetId}
           />

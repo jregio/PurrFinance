@@ -2,17 +2,21 @@ export type MonthKey = string;
 
 export type MonthlyAmount = number | null;
 
+export type FinanceFlow = "earning" | "loss";
+
 export type MonthlyAmountMap = Record<MonthKey, MonthlyAmount>;
 
 export type FinanceSubItem = {
   id: string;
   name: string;
+  flow?: FinanceFlow;
   monthlyAmounts: MonthlyAmountMap;
 };
 
 export type FinanceItem = {
   id: string;
   name: string;
+  flow?: FinanceFlow;
   monthlyAmounts?: MonthlyAmountMap;
   subItems?: FinanceSubItem[];
 };

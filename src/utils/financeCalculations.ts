@@ -1,5 +1,6 @@
 import type {
   FinanceCategory,
+  FinanceFlow,
   FinanceItem,
   FinanceSubItem,
   MonthlyAmount,
@@ -26,6 +27,46 @@ export function getCategoryValue(category: FinanceCategory, monthKey: MonthKey):
   return category.items.reduce((total, item) => total + getItemValue(item, monthKey), 0);
 }
 
+export function getSubItemSignedValue(
+  category: FinanceCategory,
+  item: FinanceItem,
+  subItem: FinanceSubItem,
+  monthKey: MonthKey,
+): number {
+  return applyFlowSign(getSubItemValue(subItem, monthKey), getSubItemFlow(category, item, subItem));
+}
+
+export function getItemSignedValue(
+  category: FinanceCategory,
+  item: FinanceItem,
+  monthKey: MonthKey,
+): number {
+  if (item.subItems?.length) {
+    return item.subItems.reduce(
+      (total, subItem) => total + getSubItemSignedValue(category, item, subItem, monthKey),
+      0,
+    );
+  }
+
+  return applyFlowSign(getItemValue(item, monthKey), getItemFlow(category, item));
+}
+
+export function getCategorySignedValue(category: FinanceCategory, monthKey: MonthKey): number {
+  return category.items.reduce((total, item) => total + getItemSignedValue(category, item, monthKey), 0);
+}
+
+export function getItemFlow(category: FinanceCategory, item: FinanceItem): FinanceFlow {
+  return item.flow ?? getDefaultFinanceFlow(category, item);
+}
+
+export function getSubItemFlow(
+  category: FinanceCategory,
+  item: FinanceItem,
+  subItem: FinanceSubItem,
+): FinanceFlow {
+  return subItem.flow ?? getDefaultFinanceFlow(category, item);
+}
+
 export function getCategoryById(
   categories: FinanceCategory[],
   categoryId: string,
@@ -44,14 +85,9 @@ export function getMonthlySummary(
   const totalExpenses = getCategoryValueById(categories, "expenses", monthKey);
   const totalHondaCrv = getCategoryValueById(categories, "honda-crv", monthKey);
   const totalBankTransfers = getCategoryValueById(categories, "bank-transfers", monthKey);
-  const netPosition =
-    totalEarnings -
-    totalDeductions -
-    totalTaxes -
-    totalApartment -
-    totalExpenses -
-    totalHondaCrv -
-    totalBankTransfers;
+  const netPosition = categories
+    .filter((category) => !isAccountCategory(category))
+    .reduce((total, category) => total + getCategorySignedValue(category, monthKey), 0);
 
   return {
     monthKey,
@@ -79,6 +115,14 @@ export function getTrendValue(
     return getMonthlySummary(categories, monthKey).netPosition;
   }
 
+  if (targetId === "summary:accounts") {
+    if (!hasAccountsMonthData(categories, monthKey)) {
+      return null;
+    }
+
+    return getAccountsSignedValue(categories, monthKey);
+  }
+
   const target = findTrendTarget(categories, targetId);
 
   if (!target) {
@@ -90,7 +134,7 @@ export function getTrendValue(
       return null;
     }
 
-    return getCategoryValue(target.category, monthKey);
+    return getCategorySignedValue(target.category, monthKey);
   }
 
   if (target.type === "item") {
@@ -102,14 +146,14 @@ export function getTrendValue(
       return null;
     }
 
-    return getItemValue(target.item, monthKey);
+    return getItemSignedValue(target.category, target.item, monthKey);
   }
 
   if (target.subItem.monthlyAmounts[monthKey] === null) {
     return null;
   }
 
-  return getSubItemValue(target.subItem, monthKey);
+  return getSubItemSignedValue(target.category, target.item, target.subItem, monthKey);
 }
 
 export function hasTrendValue(
@@ -118,7 +162,11 @@ export function hasTrendValue(
   monthKey: MonthKey,
 ): boolean {
   if (targetId === "summary:net-position") {
-    return hasMonthData(categories, monthKey);
+    return hasNetPositionMonthData(categories, monthKey);
+  }
+
+  if (targetId === "summary:accounts") {
+    return hasAccountsMonthData(categories, monthKey);
   }
 
   const target = findTrendTarget(categories, targetId);
@@ -152,7 +200,11 @@ export function getTrendSeries(
 
 export function getTrendMonthKeys(categories: FinanceCategory[], targetId: string): MonthKey[] {
   if (targetId === "summary:net-position") {
-    return getAllMonthKeys(categories);
+    return getScopedMonthKeys(categories, (category) => !isAccountCategory(category));
+  }
+
+  if (targetId === "summary:accounts") {
+    return getScopedMonthKeys(categories, isAccountCategory);
   }
 
   const target = findTrendTarget(categories, targetId);
@@ -186,15 +238,23 @@ export function getTrendSeriesFromData(
 }
 
 export function getFlattenedTrendOptions(categories: FinanceCategory[]): TrendOption[] {
-  const summaryOption: TrendOption = {
-    id: "summary:net-position",
-    label: "Net Position",
-    type: "summary",
-    path: ["Net Position"],
-  };
+  const summaryOptions: TrendOption[] = [
+    {
+      id: "summary:net-position",
+      label: "Net",
+      type: "summary",
+      path: ["Net"],
+    },
+    {
+      id: "summary:accounts",
+      label: "Accounts",
+      type: "summary",
+      path: ["Accounts"],
+    },
+  ];
 
   return [
-    summaryOption,
+    ...summaryOptions,
     ...categories.flatMap((category) => {
       const categoryOption: TrendOption = {
         id: `category:${category.id}`,
@@ -272,6 +332,34 @@ export function updateMonthlyAmount(
   }));
 }
 
+export function updateFinanceFlow(
+  categories: FinanceCategory[],
+  targetId: string,
+  flow: FinanceFlow,
+): FinanceCategory[] {
+  const [targetType, rawId] = targetId.split(":");
+
+  return categories.map((category) => ({
+    ...category,
+    items: category.items.map((item) => {
+      if (targetType === "item" && item.id === rawId && !item.subItems?.length) {
+        return { ...item, flow };
+      }
+
+      if (!item.subItems?.length) {
+        return item;
+      }
+
+      return {
+        ...item,
+        subItems: item.subItems.map((subItem) =>
+          targetType === "subitem" && subItem.id === rawId ? { ...subItem, flow } : subItem,
+        ),
+      };
+    }),
+  }));
+}
+
 function getNextMonthlyAmounts(
   monthlyAmounts: Record<MonthKey, MonthlyAmount>,
   monthKey: MonthKey,
@@ -314,6 +402,18 @@ function hasNetPositionMonthData(categories: FinanceCategory[], monthKey: MonthK
     .some((category) => categoryHasNumericMonthValue(category, monthKey));
 }
 
+function hasAccountsMonthData(categories: FinanceCategory[], monthKey: MonthKey): boolean {
+  return categories
+    .filter(isAccountCategory)
+    .some((category) => categoryHasNumericMonthValue(category, monthKey));
+}
+
+function getAccountsSignedValue(categories: FinanceCategory[], monthKey: MonthKey): number {
+  return categories
+    .filter(isAccountCategory)
+    .reduce((total, category) => total + getCategorySignedValue(category, monthKey), 0);
+}
+
 function getTrendPath(category: FinanceCategory): string[] {
   return isAccountCategory(category) ? ["Accounts", category.name] : [category.name];
 }
@@ -353,10 +453,13 @@ function collectMonthlyAmountKeys(
   Object.keys(monthlyAmounts).forEach((monthKey) => monthKeys.add(monthKey));
 }
 
-function getAllMonthKeys(categories: FinanceCategory[]): MonthKey[] {
+function getScopedMonthKeys(
+  categories: FinanceCategory[],
+  predicate: (category: FinanceCategory) => boolean,
+): MonthKey[] {
   const monthKeys = new Set<MonthKey>();
 
-  categories.forEach((category) => {
+  categories.filter(predicate).forEach((category) => {
     category.items.forEach((item) => collectItemMonthKeys(item, monthKeys));
   });
 
@@ -385,6 +488,14 @@ export function getSubItemMonthValueState(subItem: FinanceSubItem, monthKey: Mon
 
 function coerceMonthlyAmount(amount: MonthlyAmount | undefined): number {
   return typeof amount === "number" && Number.isFinite(amount) ? amount : 0;
+}
+
+function applyFlowSign(value: number, flow: FinanceFlow): number {
+  return flow === "earning" ? value : -value;
+}
+
+function getDefaultFinanceFlow(_category: FinanceCategory, _item: FinanceItem): FinanceFlow {
+  return "loss";
 }
 
 function getCategoryValueById(

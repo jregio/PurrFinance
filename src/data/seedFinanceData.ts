@@ -19,12 +19,12 @@ export function seedFinanceCategories(): FinanceCategory[] {
             {
               id: "paycheck-1",
               name: "Paycheck (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 3125),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "paycheck-2",
               name: "Paycheck (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 3125),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
           ],
         },
@@ -35,37 +35,52 @@ export function seedFinanceCategories(): FinanceCategory[] {
             {
               id: "401k-contribution-1",
               name: "401K Contribution (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 250),
-            },
-            {
-              id: "401k-contribution-2",
-              name: "401K Contribution (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 250),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "basic-ad-and-d-1",
               name: "Basic AD&D (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 2.75),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "basic-ee-life-1",
+              name: "Basic EE Life (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "gtl-imputed-1",
+              name: "GTL Imputed (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "tickets-1",
+              name: "Tickets (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "401k-contribution-2",
+              name: "401K Contribution (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "basic-ad-and-d-2",
               name: "Basic AD&D (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 2.75),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "medical-1",
-              name: "Medical (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 92.13),
+              id: "basic-ee-life-2",
+              name: "Basic EE Life (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "dental-1",
-              name: "Dental (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 18.2),
+              id: "gtl-imputed-2",
+              name: "GTL Imputed (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "vision-1",
-              name: "Vision (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 4.64),
+              id: "tickets-2",
+              name: "Tickets (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
           ],
         },
@@ -74,44 +89,74 @@ export function seedFinanceCategories(): FinanceCategory[] {
           name: "Total Taxes",
           subItems: [
             {
-              id: "federal-withholding-1",
-              name: "Federal Withholding (1)",
-              monthlyAmounts: variedMonthlyAmounts(monthKeys, (monthKey) => 418 + monthNumber(monthKey) * 1.4),
-            },
-            {
-              id: "federal-withholding-2",
-              name: "Federal Withholding (2)",
-              monthlyAmounts: variedMonthlyAmounts(monthKeys, (monthKey) => 418 + monthNumber(monthKey) * 1.4),
-            },
-            {
               id: "employee-medicare-1",
               name: "Employee Medicare (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 45.31),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "federal-income-tax-1",
+              name: "Federal Income Tax (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "pa-state-income-tax-1",
+              name: "PA State Income Tax (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "pa-unemployment-1",
+              name: "PA Unemployment (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "pittsburgh-city-1",
+              name: "Pittsburgh City (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "pittsburgh-city-lst-1",
+              name: "Pittsburgh City LST (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "social-security-employee-tax-1",
+              name: "Social Security Employee Tax (1)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "employee-medicare-2",
               name: "Employee Medicare (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 45.31),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "social-security-1",
-              name: "Social Security (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 193.75),
+              id: "federal-income-tax-2",
+              name: "Federal Income Tax (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "social-security-2",
-              name: "Social Security (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 193.75),
+              id: "pa-state-income-tax-2",
+              name: "PA State Income Tax (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "state-withholding-1",
-              name: "State Withholding (1)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 95.62),
+              id: "pa-unemployment-2",
+              name: "PA Unemployment (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "state-withholding-2",
-              name: "State Withholding (2)",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 95.62),
+              id: "pittsburgh-city-2",
+              name: "Pittsburgh City (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "pittsburgh-city-lst-2",
+              name: "Pittsburgh City LST (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "social-security-employee-tax-2",
+              name: "Social Security Employee Tax (2)",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
           ],
         },
@@ -125,31 +170,56 @@ export function seedFinanceCategories(): FinanceCategory[] {
         {
           id: "rent",
           name: "Rent",
-          monthlyAmounts: fixedMonthlyAmounts(monthKeys, 1845),
+          monthlyAmounts: nullMonthlyAmounts(monthKeys),
         },
         {
           id: "total-utilities",
           name: "Total Utilities",
           subItems: [
             {
+              id: "technology",
+              name: "Technology",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "garage",
+              name: "Garage",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
               id: "electricity",
               name: "Electricity",
-              monthlyAmounts: variedMonthlyAmounts(monthKeys, (monthKey, index) => 92 + summerLift(monthKey) + index * 1.8),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "gas-heat",
               name: "Gas / Heat",
-              monthlyAmounts: variedMonthlyAmounts(monthKeys, (monthKey) => 48 + winterLift(monthKey)),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
-              id: "internet",
-              name: "Internet",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 69.99),
+              id: "sewage",
+              name: "Sewage",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "waste-garbage",
+              name: "Waste / Garbage",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "utility-billing",
+              name: "Utility Billing",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "water",
               name: "Water",
-              monthlyAmounts: variedMonthlyAmounts(monthKeys, (_monthKey, index) => 42 + (index % 3) * 4),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "online-fee",
+              name: "Online Fee",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
           ],
         },
@@ -162,14 +232,8 @@ export function seedFinanceCategories(): FinanceCategory[] {
       items: [
         {
           id: "credit-card",
-          name: "Credit Card",
-          subItems: [
-            {
-              id: "credit-card-total",
-              name: "Credit Card",
-              monthlyAmounts: nullMonthlyAmounts(monthKeys),
-            },
-          ],
+          name: "Credit card",
+          monthlyAmounts: nullMonthlyAmounts(monthKeys),
         },
       ],
     },
@@ -179,24 +243,14 @@ export function seedFinanceCategories(): FinanceCategory[] {
       icon: "HC",
       items: [
         {
+          id: "auto-insurance",
+          name: "Auto Insurance",
+          monthlyAmounts: nullMonthlyAmounts(monthKeys),
+        },
+        {
           id: "car-loan",
           name: "Car loan",
-          monthlyAmounts: fixedMonthlyAmounts(monthKeys, 524.18),
-        },
-        {
-          id: "car-insurance",
-          name: "Insurance",
-          monthlyAmounts: fixedMonthlyAmounts(monthKeys, 158.32),
-        },
-        {
-          id: "fuel",
-          name: "Fuel",
-          monthlyAmounts: variedMonthlyAmounts(monthKeys, (_monthKey, index) => 126 + (index % 4) * 18),
-        },
-        {
-          id: "maintenance",
-          name: "Maintenance",
-          monthlyAmounts: variedMonthlyAmounts(monthKeys, (_monthKey, index) => (index % 6 === 2 ? 420 : 35)),
+          monthlyAmounts: nullMonthlyAmounts(monthKeys),
         },
       ],
     },
@@ -208,12 +262,23 @@ export function seedFinanceCategories(): FinanceCategory[] {
         {
           id: "saving-accounts",
           name: "Saving Accounts",
-          monthlyAmounts: fixedMonthlyAmounts(monthKeys, 700),
-        },
-        {
-          id: "ipon",
-          name: "Ipon",
-          monthlyAmounts: fixedMonthlyAmounts(monthKeys, 325),
+          subItems: [
+            {
+              id: "ipon",
+              name: "Ipon",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "luho",
+              name: "Luho",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+            {
+              id: "bahay",
+              name: "Bahay",
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
+            },
+          ],
         },
         {
           id: "total-remittances",
@@ -222,17 +287,17 @@ export function seedFinanceCategories(): FinanceCategory[] {
             {
               id: "allen",
               name: "Allen",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 250),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "mariane",
               name: "Mariane",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 90),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
             {
               id: "ysah",
               name: "Ysah",
-              monthlyAmounts: fixedMonthlyAmounts(monthKeys, 90),
+              monthlyAmounts: nullMonthlyAmounts(monthKeys),
             },
           ],
         },
